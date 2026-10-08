@@ -28,8 +28,9 @@ plt.savefig('output_images/original_bgr.jpg', dpi=300)
 plt.show()
 ```
 输出：
-<img alt="original_image" src="https://github.com/user-attachments/assets/3ddfc1d6-eaa9-42bb-8dd7-d39982c1ed2a" />
-
+<div align="center">
+  <img alt="original_image" src="https://github.com/user-attachments/assets/3ddfc1d6-eaa9-42bb-8dd7-d39982c1ed2a" />
+<div/>
 然后测试⼀下cv2中颜⾊空间变换的效果，这⾥的cv2.cvtColor就是颜⾊空间转换，cv2.COLOR_B-GR2RGB代表的是将原始图像BGR格式转换成R-GB格式，蓝⾊和红⾊互换，因为把'B'和'R'通道互换了，所以这是⼀个红蓝的颜⾊反转
 
 cv2.COLOR_BGR2GRAY是将原始图像的RBG格式转换为灰度图，将三维的RGB通道映射为⼀维的灰度通道
