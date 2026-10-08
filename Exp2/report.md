@@ -1,4 +1,5 @@
 # 实验⼆：图像增强参考⽂档
+202410315051-人工智能242-周洛尘
 ## ⼀、实验⽬的
 学会OpenCV的基本使⽤⽅法，利⽤OpenCV等计算机库对图像进⾏平滑、滤波等操作，实现图像增强。
 ## ⼆、实验内容
@@ -29,16 +30,124 @@ plt.show()
 ```
 输出：
 <div align="center">
-  <img alt="original_image" src="https://github.com/user-attachments/assets/3ddfc1d6-eaa9-42bb-8dd7-d39982c1ed2a" />
-<div/>
-然后测试⼀下cv2中颜⾊空间变换的效果，这⾥的cv2.cvtColor就是颜⾊空间转换，cv2.COLOR_B-GR2RGB代表的是将原始图像BGR格式转换成R-GB格式，蓝⾊和红⾊互换，因为把'B'和'R'通道互换了，所以这是⼀个红蓝的颜⾊反转
+  <img alt="Original_image" src="https://github.com/user-attachments/assets/c46d546b-3689-4eb5-9104-7376a2d9ee44" />
+</div>
+然后测试⼀下cv2中颜⾊空间变换的效果，这⾥的cv2.cvtColor就是颜⾊空间转换，cv2.COLOR_BGR2RGB代表的是将原始图像BGR格式转换成RGB格式，蓝⾊和红⾊互换，因为把'B'和'R'通道互换了，所以这是⼀个红蓝的颜⾊反转
 
+```python
+rgb_img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+plt.imshow(rgb_img)
+plt.title('RGB Image')
+plt.savefig('output_images/rgb_image.jpg', dpi=300)
+plt.show()
+```
+红蓝反准图：
+<div align="center">
+  <img alt="RGB_image" src="https://github.com/user-attachments/assets/7f589cd4-5d87-4a73-bfa9-71b0a8cbb7e2" />
+</div>
 cv2.COLOR_BGR2GRAY是将原始图像的RBG格式转换为灰度图，将三维的RGB通道映射为⼀维的灰度通道
+
+```python
+# 将原始图像的RBG格式转换为灰度图
+gray_img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+plt.imshow(gray_img, cmap='gray')
+plt.title('Gray Image')
+plt.savefig('output_images/gray_image.jpg', dpi=300)
+plt.show()
+```
+灰度图：
+<div align="center">
+  <img alt="Gray_image" src="https://github.com/user-attachments/assets/09b6a5c3-2e36-402d-9b12-4b41e5e52ac3" />
+</div>
+
 ### 2.3 添加噪声
 这⾥在原始图像的基础上添加噪声，引⼊了两个API⽅法，椒盐噪声和⾼斯噪声，通过对⽐可以发现，椒盐噪声和⾼斯噪声的本质不同，椒盐噪声表现为像素会随机替换为⽩⾊或者⿊⾊像素（灰度通道），在RGB通道表现为像素变成随机彩⾊点，⽽⾼斯噪声会在每个像素上添加随机偏差，服从⾼斯分布
+```python
+sp_noise_img = random_noise(rgb_img, mode='s&p', amount=0.4)
+gus_noise_img = random_noise(rgb_img, mode='gaussian', mean=0.2, var=0.03)
+# 原图
+plt.subplot(1, 3, 1)
+plt.imshow(rgb_img, cmap='gray')
+plt.title('Original Image')
+# 椒盐噪声
+plt.subplot(1, 3, 2)
+plt.imshow(sp_noise_img, cmap='gray')
+plt.title('S&P Noise')
+# ⾼斯噪声
+plt.subplot(1, 3, 3)
+plt.imshow(gus_noise_img, cmap='gray')
+plt.title('Gus Noise')
+plt.tight_layout()
+plt.savefig('output_images/noise_comparison.jpg', dpi=300)
+plt.show()
+```
+噪声对比图：
+<div align="center">
+  <img alt="Composed_images" src="https://github.com/user-attachments/assets/477fa8b4-29bd-4a3c-87ed-a4f28a2009a2" />
+</div>
+
 ### 2.4 图像滤波
 将图像认为产⽣噪声后，⽤OpenCV的三个API滤波⽅式进⾏对⽐，分别对椒盐滤波和⾼斯滤波使⽤【均值滤波】，【中值滤波】，【⾼斯滤波】，对⽐每个最适合的滤波⽅式。
+```python
+mean_sp = cv2.blur(sp_noise_img, (5, 5))
+mean_gus = cv2.blur(gus_noise_img, (5, 5))
+
+mid_sp = cv2.medianBlur((sp_noise_img*255).astype(np.uint8), 5)
+mid_gus = cv2.medianBlur((gus_noise_img*255).astype(np.uint8), 5)
+
+gauss_sp = cv2.GaussianBlur((sp_noise_img*255).astype(np.uint8), (5, 5), 0)
+gauss_gus = cv2.GaussianBlur((gus_noise_img*255).astype(np.uint8), (5, 5), 0)
+
+plt.figure(figsize=(13, 9))
+
+plt.subplot(2, 3, 1)
+plt.imshow(mean_sp)
+plt.title("S&P noise with Mean Filter")
+plt.subplot(2, 3, 2)
+plt.imshow(mid_sp)
+plt.title("S&P Noise with Median Filter")
+plt.subplot(2, 3, 3)
+plt.imshow(gauss_sp)
+plt.title("S&P Noise with Gaussian Filter")
+
+plt.subplot(2, 3, 4)
+plt.imshow(mean_gus)
+plt.title("Gaussian noise with Mean Filter")
+plt.subplot(2, 3, 5)
+plt.imshow(mid_gus)
+plt.title("Gaussian noise with Median Filter")
+plt.subplot(2, 3, 6)
+plt.imshow(gauss_gus)
+plt.title("Gaussian noise with Gaussian Filter")
+plt.tight_layout()
+plt.savefig('result/filter_results_2x3.jpg', dpi=300)
+plt.show()
+```
+图像滤波对⽐图：
+<div align="center">
+  <img alt="Composed_images2" src="https://github.com/user-attachments/assets/672430f4-5fda-418f-aa31-2436fb2afab0" />
+</div>
+
 ### 2.5 ⼿动实现⼀个滤波⽅式（中值滤波）
+
+```python
+manual_mid = cv2.medianBlur((sp_noise_img * 255).astype(np.uint8), 5)
+
+plt.figure(figsize=(8, 4))
+plt.subplot(1, 2, 1)
+plt.imshow(sp_noise_img, cmap='gray')
+plt.title("S&P noise img")
+plt.subplot(1, 2, 2)
+plt.imshow(manual_mid, cmap='gray')
+plt.title("median filter")
+plt.tight_layout()
+plt.show()
+```
+⼿动构建中值滤波效果图：
+<div align="center">
+  <img alt="result_image" src="https://github.com/user-attachments/assets/53c7357d-3908-446a-b304-bdf371d9e94b" />
+</div>
+
 ## 三、实验结果与分析
 ### 1.原始图像与颜⾊空间转换
 - 通过 OpenCV 读取图像并显⽰，可以清楚看到原始彩⾊图像的细节。
