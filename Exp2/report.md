@@ -3,7 +3,7 @@
 学会OpenCV的基本使⽤⽅法，利⽤OpenCV等计算机库对图像进⾏平滑、滤波等操作，实现图像增强。
 ## ⼆、实验内容
 2.1 导⼊图像滤波相关的依赖包
-1.OpenCV库：计算机视觉与图像处理
-2.scikit-image库：图像增强与分析random_noise ⽤于给图像添加噪声
-3.NumPy库：科学计算的基础库
-4.Matplotlib库：绘图与数据可视化
+1. OpenCV库：计算机视觉与图像处理
+2. scikit-image库：图像增强与分析random_noise ⽤于给图像添加噪声
+3. NumPy库：科学计算的基础库
+4. Matplotlib库：绘图与数据可视化
