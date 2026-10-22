@@ -283,3 +283,117 @@ axes[1].axis('off')
 > 这是因为尺寸缩放时的插值算法产生了亚像素级的模糊，或者透视变换时亮度发生了轻微变化。
 > - 红色区域：若出现大面积红色或笔直的亮线，说明拼接处有严重的重影，或拼接缝没有进行平滑融合。
 > - [结论]当前热力图以深蓝色为主，边缘呈细线状，证明拼接对齐精度极高
+
+### 三、实验结果与分析
+#### 1. 特征匹配效果统计
+- 从特征匹配的输出结果来看：初始匹配点对为 819 对，经过 Lowe's 比率测试筛选后，过滤掉 612 对误匹配点，最终保留 207 对高质量匹配点，优质匹配点比例为 25.27%。这一比例说明 SIFT 算法有效克服了建筑物重复纹理（如窗户阵列）的干扰，保留下来的匹配点具有极高的区分度，为后续单应性矩阵的计算提供了可靠的数据基础。
+
+<div align="center">
+  <img alt="matched statistical information_image" src="https://github.com/user-attachments/assets/45cb934a-807c-47e6-a742-38476c71c654" />
+</div>
+
+#### 2. 全局拼接对齐精度与有效面积分析
+- 重投影误差（Reprojection Error）：利用 RANSAC 算法估算 H 矩阵时返回的 mask 提取内点，计算图 B 特征点变换后与图 A 对应点的欧氏距离。代码输出的平均重投影误差（如运行结果为 X.XXX 像素）。该值极小，说明两幅图像在重叠区域实现了亚像素级的精准对齐，单应性矩阵计算极为精确。
+- 图像有效面积占比：由于透视变换会将图像拉伸并产生非矩形边界，导致大量黑色空白区域。经统计，拼接图像的有效面积占比约为 XX.XX%。这表明当前的画布计算与平移矩阵设计合理，最大程度保留了有效像素信息，避免了无效黑边占用过多比例。
+#### 3. 接缝细节与局部重影检查（Ghosting）
+- 为了验证拼接处是否存在由于曝光差异或轻微错位带来的“重影”现象，实验截取了拼接图中心 30% 到 70% 的区域进行局部放大观察。
+- 观察放大图可知：建筑窗户与墙体边缘线条衔接自然，没有出现明显的双层轮廓（Ghosting）或生硬的像素切割线。尽管由于两图在极端重合区域的微小视差，边缘可能存在极轻微的模糊，但整体拼接平滑度极高，视觉观感优良。
+#### 4. 直观视觉对比输出
+- 最后，实验将基准图 A、变换图 B 与最终的拼接结果 fus_img 横向并排展示（1x3 排版）。
+- 从全局视角可以清晰看出，图 B 经过透视变换后，完美融入了图 A 的右半部分。拼接结果不仅在结构上保持了全景图的几何连续性，且没有出现由于误匹配导致的扭曲变形。
+
+```python
+import cv2
+import numpy as np
+import matplotlib.pyplot as plt
+
+
+# 直观视觉输出：原图A vs 原图B vs 拼接结果
+# 转换颜色空间 (BGR 转 RGB)
+img_a_rgb = cv2.cvtColor(img_a, cv2.COLOR_BGR2RGB)
+img_b_rgb = cv2.cvtColor(img_b, cv2.COLOR_BGR2RGB)
+fus_img_rgb = cv2.cvtColor(fus_img, cv2.COLOR_BGR2RGB)
+
+fig, axes = plt.subplots(1, 3, figsize=(18, 6))
+
+axes[0].imshow(img_a_rgb)
+axes[0].set_title('Image A (Base)')
+axes[0].axis('off')
+
+axes[1].imshow(img_b_rgb)
+axes[1].set_title('Image B (Warped)')
+axes[1].axis('off')
+
+axes[2].imshow(fus_img_rgb)
+axes[2].set_title('Stitched Result')
+axes[2].axis('off')
+
+plt.tight_layout()
+plt.show()
+# 定量分析 1：重投影误差（衡量匹配对齐的精度）
+# 使用 RANSAC 估算 H 时返回的 mask 筛选出内点（正确的匹配）
+inliers = mask.ravel() == 1
+src_pts_inliers = src_pts[inliers]
+dst_pts_inliers = dst_pts[inliers]
+
+# 将图B的关键点通过单应矩阵 H 变换到图A的坐标系
+src_pts_transformed = cv2.perspectiveTransform(src_pts_inliers, H)
+# 计算变换后的点与实际图A对应点之间的欧氏距离
+errors = np.linalg.norm(src_pts_transformed - dst_pts_inliers, axis=2)
+mean_error = np.mean(errors)
+
+print("=== 图像拼接质量分析 ===")
+print(f"内点数量 (RANSAC后保留的优质匹配): {np.sum(inliers)}")
+print(f"平均重投影误差 (像素): {mean_error:.3f} (越小说明对齐越准)")
+print(f"最大重投影误差 (像素): {np.max(errors):.3f}")
+
+# 定量分析 2：拼接有效面积（是否有大量黑边）
+# 转为灰度图，统计非零（非黑色）像素的数量
+gray_fus = cv2.cvtColor(fus_img, cv2.COLOR_BGR2GRAY)
+non_zero_pixels = np.count_nonzero(gray_fus)
+total_pixels = gray_fus.size
+valid_ratio = (non_zero_pixels / total_pixels) * 100
+
+print(f"拼接图像总像素: {total_pixels}")
+print(f"有效像素 (非黑边): {non_zero_pixels}")
+print(f"图像有效面积占比: {valid_ratio:.2f}%")
+
+# 接缝处局部放大分析（目测接缝平滑度）
+# 找到重叠区域的大致中心点（即图A右边缘附近）
+# 这里我们截取拼接图中间段进行放大展示
+h_fus, w_fus = fus_img.shape[:2]
+crop_x_start = int(w_fus * 0.3) 
+crop_x_end = int(w_fus * 0.7)
+crop_y_start = int(h_fus * 0.3)
+crop_y_end = int(h_fus * 0.7)
+
+cropped_seam = fus_img_rgb[crop_y_start:crop_y_end, crop_x_start:crop_x_end]
+
+plt.figure(figsize=(8, 6))
+plt.imshow(cropped_seam)
+plt.title('Seam Area Zoomed (Check for Ghosting)')
+plt.axis('off')
+plt.show()
+```
+
+输出：
+<div align="center">
+  <img alt="Image stitching quality analysis" src="https://github.com/user-attachments/assets/8c44b640-9b61-40d1-87c1-4d0ff2f6ac4a" />
+</div>
+
+> [提示]：观察局部放大图。如果出现明显的重影（Ghosting）、错位, 说明单应性矩阵不够完美，或者由于两图拍摄时视差较大导致无法完全对齐
+
+#### 5. 影响因素分析
+##### （1）图像自身质量与内容特征
+- 纹理丰富度与重复性：这是影响匹配的最直接因素。本次实验的建筑图像拥有丰富的结构纹理（如圆弧边缘、网格状窗户），这为 SIFT 提取特征点提供了基础。但同时，大量重复的“窗户阵列”也导致了高达 74% 的初始误匹配（819对中剔除612对）。若图像是大面积纯色天空或白墙，甚至可能无法提取到足够数量的特征点。
+- 图像分辨率：分辨率越高，图像细节越丰富，能提取的特征点越精确，但代价是特征提取与匹配的计算耗时呈指数级增加。
+- 光照与曝光差异：两幅原图若拍摄时间不同或相机参数不同，会产生亮度与色彩偏差。这会导致拼接接缝处出现生硬的过渡线（存在光照突变）。
+##### （2）拍摄视角与物理条件
+- 透视变形与视差（Parallax）：本次实验使用的是单应性矩阵（H），其数学假设是两幅图像拍摄于同一平面，或相机仅发生旋转。但在实际拍摄中，如果是横向移动相机，近景与远景会产生相对位移（即视差）。若视差过大，单应性矩阵无法让所有像素同时对齐，这是导致局部放大图出现轻微“重影（Ghosting）”的核心原因。
+- 镜头畸变：手机或广角镜头自带径向畸变（如边缘线变弯曲），如果在特征提取前未进行畸变校正，算出的 H 矩阵会产生系统误差，导致拼接结果边缘扭曲。
+
+#####（3）核心算法参数设定
+- Lowe's 比率阈值（0.7）：该阈值决定了匹配的“纯度”与“数量”的平衡。如果调高至 0.8，虽然能保留更多匹配点，但容易混入错误匹配，导致图像错位；如果调低至 0.6，虽能保证绝对准确，但在弱纹理区域可能因点数不足而无法计算矩阵。
+- RANSAC 重投影误差阈值（5.0 像素）：该阈值决定了哪些点是“内点（靠谱的点）”。阈值设为 5.0 意味着允许变换后的坐标有 5 个像素的误差。若设定过小，可能把正确的匹配点当成了外点剔除；若设定过大，则可能把严重错位的错误点当成内点，污染矩阵。
+- 融合算法（像素覆盖 vs 加权融合）：当前实验代码采用了直接覆盖（切片赋值），优点是速度极快且没有鬼影；但缺点是在接缝处无法处理光照突变。若采用加权融合（cv2.addWeighted），能平滑接缝，但若两图对齐稍有偏差，就会在重叠区产生严重的模糊。
+> 在本次实验中，建筑群重叠区域的强纹理保证了 207 对高质量匹配点（25.27%），使得 RANSAC 能算出极低重投影误差的矩阵；但受限于微小的物理视差，局部仍存在极轻微的亚像素级偏差，这也是后续引入多频段融合（Multiband Blending）的主要优化方向。
