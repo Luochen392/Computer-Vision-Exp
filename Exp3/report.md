@@ -18,11 +18,53 @@ from skimage.metrics import structural_similarity as ssim
 ```
 
 ### 2. 图像预处理与特征提取
-- 读取原图 a.jpg 和 b.jpg。
-- 将彩色图像转换为灰度图（cv2.cvtColor），以减少计算量。
-- 初始化 SIFT 检测器（cv2.SIFT_create），分别提取图像 A 和图像 B 的关键点（Keypoints）和特征描述符（Descriptors）。
+- 读取待拼接的原图 a.jpg（彩色基准图）与 b.jpg（待变换图）。
+- 为了提升特征检测算法的运算效率，并消除色彩冗余对特征提取的干扰，将两张彩色图像转换为单通道灰度图。
+- 随后，利用 matplotlib 绘制 2x2 的对比图阵，直观展示彩色原图与灰度图的差异。
 
-3. 特征匹配与筛选
+```python
+# 读取图像
+img_a = cv2.imread("a.jpg")
+img_b = cv2.imread("b.jpg")
+
+# 转换格式 (注意这里必须定义 img_a_rgb 和 img_b_rgb)
+img_a_rgb = cv2.cvtColor(img_a, cv2.COLOR_BGR2RGB)
+img_b_rgb = cv2.cvtColor(img_b, cv2.COLOR_BGR2RGB)
+
+# 转换为灰度图
+gray_a = cv2.cvtColor(img_a, cv2.COLOR_BGR2GRAY)
+gray_b = cv2.cvtColor(img_b, cv2.COLOR_BGR2GRAY)
+
+# 创建 2x2 画布
+fig, axes = plt.subplots(2, 2, figsize=(10, 8))
+
+# 绘制四个子图
+# 左上：Image A (Color)
+axes[0, 0].imshow(img_a_rgb)  # 这里用到 img_a_rgb
+axes[0, 0].set_title('Image A (Color)')
+axes[0, 0].axis('off')
+
+# 右上：Image B (Color)
+axes[0, 1].imshow(img_b_rgb)  # 这里用到 img_b_rgb
+axes[0, 1].set_title('Image B (Color)')
+axes[0, 1].axis('off')
+
+# 左下：Image A (Grayscale)
+axes[1, 0].imshow(gray_a, cmap='gray')
+axes[1, 0].set_title('Image A (Grayscale)')
+axes[1, 0].axis('off')
+
+# 右下：Image B (Grayscale)
+axes[1, 1].imshow(gray_b, cmap='gray')
+axes[1, 1].set_title('Image B (Grayscale)')
+axes[1, 1].axis('off')
+
+# 调整布局并显示
+plt.tight_layout()
+plt.show()
+```
+
+### 3. 特征匹配与筛选
 - 构建 FLANN 匹配器（cv2.FlannBasedMatcher），使用 KNN 算法（knnMatch，k=2）进行特征匹配。
 - 应用 Lowe's 比率测试（Ratio Test），通过比较最近邻与次近邻的距离（阈值取 0.7），筛选出优质的匹配点对（good_matches）。
 - 使用 cv2.drawMatches 绘制匹配的 SIFT 关键点连线图，用于直观验证匹配效果。
