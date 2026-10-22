@@ -3,16 +3,14 @@
 ## 一、实验目的
 基于 SIFT 特征检测算法和 FLANN 特征匹配方法，实现两幅图像的特征点提取、匹配和自动拼接。掌握图像配准（单应性矩阵计算）和透视变换融合的基本原理与实现方法。
 ## 二、实验内容
-导入必要库
+### 1.导入必要库
 - cv2 (OpenCV库)：用于图像读取、SIFT特征提取、FLANN匹配、单应性矩阵计算及透视变换等核心操作。
 - numpy (Numpy库)：用于构建匹配点坐标矩阵、计算图像角点以及构建平移矩阵。
 
-2. 图像预处理与特征提取
-读取原图 a.jpg 和 b.jpg。
-
-将彩色图像转换为灰度图（cv2.cvtColor），以减少计算量。
-
-初始化 SIFT 检测器（cv2.SIFT_create），分别提取图像 A 和图像 B 的关键点（Keypoints）和特征描述符（Descriptors）。
+### 2. 图像预处理与特征提取
+- 读取原图 a.jpg 和 b.jpg。
+- 将彩色图像转换为灰度图（cv2.cvtColor），以减少计算量。
+- 初始化 SIFT 检测器（cv2.SIFT_create），分别提取图像 A 和图像 B 的关键点（Keypoints）和特征描述符（Descriptors）。
 
 3. 特征匹配与筛选
 构建 FLANN 匹配器（cv2.FlannBasedMatcher），使用 KNN 算法（knnMatch，k=2）进行特征匹配。
