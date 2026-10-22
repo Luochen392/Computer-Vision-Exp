@@ -6,6 +6,16 @@
 ### 1.导入必要库
 - cv2 (OpenCV库)：用于图像读取、SIFT特征提取、FLANN匹配、单应性矩阵计算及透视变换等核心操作。
 - numpy (Numpy库)：用于构建匹配点坐标矩阵、计算图像角点以及构建平移矩阵。
+- matplotlib.pyplot：用于替换 cv2.imshow 以避免 Jupyter 内核崩溃，并实现高自由度的多子图对比排版。
+- skimage.metrics：用于引入 PSNR 和 SSIM 算法，客观评估拼接结果与原图的相似度。
+
+```python
+import cv2
+import numpy as np
+import matplotlib.pyplot as plt
+from skimage.metrics import peak_signal_noise_ratio as psnr
+from skimage.metrics import structural_similarity as ssim
+```
 
 ### 2. 图像预处理与特征提取
 - 读取原图 a.jpg 和 b.jpg。
@@ -13,11 +23,9 @@
 - 初始化 SIFT 检测器（cv2.SIFT_create），分别提取图像 A 和图像 B 的关键点（Keypoints）和特征描述符（Descriptors）。
 
 3. 特征匹配与筛选
-构建 FLANN 匹配器（cv2.FlannBasedMatcher），使用 KNN 算法（knnMatch，k=2）进行特征匹配。
-
-应用 Lowe's 比率测试（Ratio Test），通过比较最近邻与次近邻的距离（阈值取 0.7），筛选出优质的匹配点对（good_matches）。
-
-使用 cv2.drawMatches 绘制匹配的 SIFT 关键点连线图，用于直观验证匹配效果。
+- 构建 FLANN 匹配器（cv2.FlannBasedMatcher），使用 KNN 算法（knnMatch，k=2）进行特征匹配。
+- 应用 Lowe's 比率测试（Ratio Test），通过比较最近邻与次近邻的距离（阈值取 0.7），筛选出优质的匹配点对（good_matches）。
+- 使用 cv2.drawMatches 绘制匹配的 SIFT 关键点连线图，用于直观验证匹配效果。
 
 4. 计算单应性矩阵（图像配准）
 从筛选后的优质匹配点中，分别提取图像 B（src_pts）和图像 A（dst_pts）的特征点坐标。
