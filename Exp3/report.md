@@ -68,6 +68,7 @@ plt.show()
   <img alt="original_images" src="https://github.com/user-attachments/assets/1d650909-3660-4d61-a3bb-476a170fdebe" />
   <img alt="gray_images" src="https://github.com/user-attachments/assets/93d1ea67-80eb-47a0-b8a6-ffd7e93bfdef" />
 </div>
+
 ### 3. 特征匹配与筛选
 - 构建 FLANN 匹配器（cv2.FlannBasedMatcher），使用 KNN 算法（knnMatch，k=2）进行特征匹配。
 - 应用 Lowe's 比率测试（Ratio Test），通过比较最近邻与次近邻的距离（阈值取 0.7），筛选出优质的匹配点对（good_matches）。
