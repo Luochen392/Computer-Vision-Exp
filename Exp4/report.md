@@ -78,24 +78,25 @@ print(f"标签张量形状: {labels.shape}")
 
 输出：
 
-
-
-**通过输出可以看出：共加载60,000张训练图片和10,000张测试图片，所有图片的格式都是28*28像素**
+<div align="center">
+  <img alt="output_image" src="https://github.com/user-attachments/assets/6229efe7-d88c-4255-98af-029431b5cf18" />
+</div>
 
 ### 4.创建MLP模型
 
-- 首先，需要先定义一个模型类`class MLP(nn.Module)`,`nn.Module`: 所有神经网络模块的基类,提供参数管理、GPU转移、序列化等功能
-- 然后定义初始化方法 `__init__`，这里的代码中定义了两层的全连接层：
-  - `self.l1 = nn.Linear(784, 128)`:输入维度: 784 (28×28) → 输出维度: 128 (隐藏层神经元数量)
-  - `self.l2 = nn.Linear(128, 10)`:输入维度: 128(隐藏层神经元数量) → 输出维度: 10 (对应10个数字类别0-9)
-- 再定义前向传播 `forward`:
-  - `a1 = self.l1(x)`:线性变换 x @ W1 + b1
-  - `x1 = F.relu(a1)`:ReLU激活函数 max(0, a1)
-  - `a2 = self.l2(x1)`:线性变换 x1 @ W2 + b2
-  - `x2 = a2`:输出层
-- 最后创建优化器：
-  - `model = MLP().to(device)`:先实例化MLP模型把模型参数移动到GPU
-  - `optimizer = optim.SGD(model.parameters(), lr=0.1)`:然后使用PyTorch内置优化器，采用梯度下降优化算法和0.1的学习率
+- 首先，需要先定义一个模型类 class mlp(nn.Module)，nn.Module：所有神经网络模块的基类，提供参数管理、GPU转移、序列化等功能
+- 然后定义初始化方法 __init__，这里的代码中定义了两层的全连接层：
+  - self.l1 = nn.Linear(784, 128): 输入维度: 784 (28×28) → 输出维度: 128 (隐藏层神经元数量)
+  - self.l2 = nn.Linear(128, 10): 输入维度: 128 (隐藏层神经元数量) → 输出维度: 10 (对应10个数字类别0-9)
+- 再定义前向传播 forward：
+  - a1 = self.l1(x): 线性变换 x @ W1 + b1
+  - x1 = F.relu(a1): ReLU激活函数 max(0, a1)
+  - a2 = self.l2(x1): 线性变换 x1 @ W2 + b2
+  - return a2: 输出层 (直接返回未经过 Softmax 的原始得分 Logits)
+- 最后创建优化器并验证结构：
+  - model = mlp().to(device): 先实例化MLP模型把模型参数移动到GPU/CPU设备上
+  - optimizer = optim.SGD(model.parameters(), lr=0.01): 然后使用PyTorch内置优化器，采用随机梯度下降算法和0.01的学习率
+  - print(model): 打印模型结构，直观验证网络层的维度与设计是否符合预期
  
 ```python
 # 定义MLP模型
