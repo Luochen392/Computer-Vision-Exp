@@ -42,26 +42,38 @@ device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 ```
 
 ### 3.加载数据
-- 训练数据加载器 `train_loader`:加载 MNIST手写数字数据集训练集
-- 测试数据加载器 `test_loader`:加载 MNIST手写数字数据集测试集
-- 数据预处理`transform`:将PIL图像或numpy数组转换为PyTorch张量
-
+- 训练数据加载器 train_loader：加载 MNIST 训练集，按指定批次大小打乱并封装为可迭代对象
+- 测试数据加载器 test_loader：加载 MNIST 测试集，同样按批次封装用于最终评估
+- 数据预处理 transforms.ToTensor()：将图像转换为 PyTorch 张量，并将像素值归一化至 0~1 区间
+- 数据信息验证 print()：输出数据集样本总数、Batch 划分数量及单批次张量维度，确保输入正确
 ```python
 train_loader = torch.utils.data.DataLoader(
     datasets.MNIST('data', train=True, download=True,
-    transform=transforms.Compose([
-        transforms.ToTensor(),
-    ])),
+                   transform=transforms.Compose([
+                       transforms.ToTensor(),
+                   ])),
     batch_size=batch_size, shuffle=True)
 
 test_loader = torch.utils.data.DataLoader(
     datasets.MNIST('data', train=False, transform=transforms.Compose([
-        transforms.ToTensor(),
-    ])),
+                       transforms.ToTensor(),
+                   ])),
     batch_size=batch_size, shuffle=True)
 
-print("训练数据形状:", train_loader.dataset.data.shape)
-print("测试数据形式:", test_loader.dataset.data.shape)
+print("=== 数据集信息 ===")
+# 1. 输出总样本数
+print(f"训练集总样本数: {len(train_loader.dataset)}")
+print(f"测试集总样本数: {len(test_loader.dataset)}")
+
+# 2. 输出 Batch 数量
+print(f"训练集 Batch 数量: {len(train_loader)}")
+print(f"测试集 Batch 数量: {len(test_loader)}")
+
+# 3. 抽取一个 Batch 查看数据维度形状
+images, labels = next(iter(train_loader))
+print("\n=== 数据维度 ===")
+print(f"图像张量形状 (Batch, Channel, Height, Width): {images.shape}")
+print(f"标签张量形状: {labels.shape}")
 ```
 
 输出：
