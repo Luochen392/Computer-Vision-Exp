@@ -1,4 +1,4 @@
-<img width="381" height="329" alt="image" src="https://github.com/user-attachments/assets/c3bab57f-6d8d-43c9-994e-2ff1bd9e1ecd" /># 实验四 全连接神经网络
+# 实验四 全连接神经网络
 202410315051-人工智能242-周落尘
 ## 一、实验目的
 - ### 掌握深度学习框架的使用：
