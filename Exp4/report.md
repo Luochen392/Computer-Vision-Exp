@@ -12,6 +12,15 @@
 
 ## 二、实验内容
 ### 1.导入必要库
+- `torch`：PyTorch 的核心库。用于张量（Tensor）的创建与运算。
+- `numpy`：科学计算基础库。用于处理多维数组矩阵运算。
+- `torch.nn`：神经网络模块。包含了构建网络层所需的各类组件（如全连接层 Linear、卷积层 Conv2d）、损失函数（如 CrossEntropyLoss 等）。
+- `torch.nn.functional`：函数式接口。里面包含了激活函数（F.relu）、池化操作，以及函数式的损失计算用。
+- `torch.optim` '：优化器模块。包含了用于更新模型权重的各种优化算法，如随机梯度下降（SGD）、Adam 等。
+- `matplotlib.pyplot`: 最常用的绘图库。在这里专门用于将训练过程中的 Loss 下降曲线、测试准确率，以及混淆矩阵等结果画成直观的图表，方便分析。
+- `torchvision` PyTorch 针对视觉任务提供的工具包：
+  - `datasets`：内置了常用的经典数据集（如实验中的 MNIST 手写数字数据集），提供了一键下载、读取和封装的功能。
+  - `transforms`：数据预处理工具箱。用于对图像进行转换，比如把图片转成张量格式（ToTensor()）、裁剪、翻转以及标准化（Normalize）等操作。
 
 ```python
 import torch
@@ -24,8 +33,8 @@ from torchvision import datasets, transforms
 ```
 
 ### 2.设置超参数和设备
-- `batch_size = 2048`:设置批量大小参数，每次训练时同时处理2048个样本
-- `device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')`:有GPU → 选择GPU加速，无GPU → 选择CPU计算
+> batch_size = 2048：设定每次送入模型的样本数量，以提升并行计算效率并稳定梯度更新。
+> device = ...：自动检测并优先使用GPU加速计算，若无可用GPU则退回CPU。
 
 ```python
 batch_size = 2048
@@ -55,11 +64,9 @@ print("训练数据形状:", train_loader.dataset.data.shape)
 print("测试数据形式:", test_loader.dataset.data.shape)
 ```
 
-```
 输出：
-    训练数据形状: torch.Size([60000, 28, 28])
-    测试数据形式: torch.Size([10000, 28, 28])
-```
+   
+
 
 **通过输出可以看出：共加载60,000张训练图片和10,000张测试图片，所有图片的格式都是28*28像素**
 
