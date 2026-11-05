@@ -33,8 +33,8 @@ from torchvision import datasets, transforms
 ```
 
 ### 2.设置超参数和设备
-> batch_size = 2048：设定每次送入模型的样本数量，以提升并行计算效率并稳定梯度更新。
-> device = ...：自动检测并优先使用GPU加速计算，若无可用GPU则退回CPU。
+- batch_size = 2048：设定每次送入模型的样本数量，以提升并行计算效率并稳定梯度更新。
+- device = ...：自动检测并优先使用GPU加速计算，若无可用GPU则退回CPU。
 
 ```python
 batch_size = 2048
