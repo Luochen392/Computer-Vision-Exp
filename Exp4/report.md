@@ -99,10 +99,9 @@ print(f"标签张量形状: {labels.shape}")
   - print(model): 打印模型结构，直观验证网络层的维度与设计是否符合预期
  
 ```python
-# 定义MLP模型
-class MLP(nn.Module):
+class mlp(nn.Module):
     def __init__(self):
-        super(MLP, self).__init__()
+        super(mlp, self).__init__()
         self.l1 = nn.Linear(784, 128)
         self.l2 = nn.Linear(128, 10)
 
@@ -110,24 +109,20 @@ class MLP(nn.Module):
         a1 = self.l1(x)
         x1 = F.relu(a1)
         a2 = self.l2(x1)
-        x2 = a2
-        return x2
+        return a2
 
-# 创建模型和优化器
-model = MLP().to(device)
-optimizer = optim.SGD(model.parameters(), lr=0.1)
+model = mlp().to(device)
+optimizer = optim.SGD(model.parameters(), lr=0.01)
+
+print("基础 MLP 模型结构：")
 print(model)
 ```
 
-```
 输出：
-MLP(
-  (l1): Linear(in_features=784, out_features=128, bias=True)
-  (l2): Linear(in_features=128, out_features=10, bias=True)
-)
-```
 
-**通过输出，可以看到两层全连接层的输入输出节点数，值得一提的是下一层的输入节点一定要与上一层的输出节点数量保持一致，否则无法正确构建神经网络**
+<div align="center">
+  <img alt="mlp_image" src="https://github.com/user-attachments/assets/b51581db-e463-41ce-a39f-a040b02944d1" />
+</div>
 
 ### 5.模型迭代训练
 
