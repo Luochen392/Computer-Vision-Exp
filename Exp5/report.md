@@ -206,5 +206,176 @@ for epoch in range(epochs):
     # 输出日志
     print('epoch:{}, train_loss:{:.4f}, test_loss:{:.4f}, acc:{:.4f}'.format(epoch + 1, train_loss, test_loss, acc))
 ```
+
+输出：
+```python
+开始训练...
+
+epoch:1, train_loss:2.3052, test_loss:2.3023, acc:0.1135
+epoch:2, train_loss:2.2676, test_loss:1.9824, acc:0.2450
+epoch:3, train_loss:1.1738, test_loss:0.5603, acc:0.8025
+epoch:4, train_loss:0.3317, test_loss:0.2113, acc:0.9360
+epoch:5, train_loss:0.1725, test_loss:0.1511, acc:0.9513
+epoch:6, train_loss:0.1252, test_loss:0.1107, acc:0.9665
+epoch:7, train_loss:0.0974, test_loss:0.0794, acc:0.9748
+epoch:8, train_loss:0.0792, test_loss:0.0737, acc:0.9780
+epoch:9, train_loss:0.0706, test_loss:0.0699, acc:0.9787
+epoch:10, train_loss:0.0637, test_loss:0.0578, acc:0.9826
+epoch:11, train_loss:0.0567, test_loss:0.0504, acc:0.9846
+epoch:12, train_loss:0.0492, test_loss:0.0473, acc:0.9856
+epoch:13, train_loss:0.0462, test_loss:0.0554, acc:0.9819
+epoch:14, train_loss:0.0416, test_loss:0.0467, acc:0.9855
+epoch:15, train_loss:0.0426, test_loss:0.0506, acc:0.9837
+epoch:16, train_loss:0.0405, test_loss:0.0495, acc:0.9860
+epoch:17, train_loss:0.0350, test_loss:0.0426, acc:0.9865
+epoch:18, train_loss:0.0332, test_loss:0.0499, acc:0.9847
+epoch:19, train_loss:0.0325, test_loss:0.0444, acc:0.9865
+epoch:20, train_loss:0.0308, test_loss:0.0362, acc:0.9885
+epoch:21, train_loss:0.0286, test_loss:0.0405, acc:0.9883
+epoch:22, train_loss:0.0279, test_loss:0.0448, acc:0.9879
+epoch:23, train_loss:0.0255, test_loss:0.0491, acc:0.9852
+epoch:24, train_loss:0.0249, test_loss:0.0446, acc:0.9876
+epoch:25, train_loss:0.0242, test_loss:0.0446, acc:0.9865
+epoch:26, train_loss:0.0235, test_loss:0.0385, acc:0.9885
+epoch:27, train_loss:0.0193, test_loss:0.0496, acc:0.9859
+epoch:28, train_loss:0.0189, test_loss:0.0480, acc:0.9860
+epoch:29, train_loss:0.0186, test_loss:0.0421, acc:0.9874
+epoch:30, train_loss:0.0175, test_loss:0.0400, acc:0.9884
+```
+
+### 6. 绘制 Loss 和 Acc 曲线图
+
+模型训练过程的数据可视化，展示模型的学习效果：
+- （Loss 曲线）：绘制了 Train Loss（蓝线）与 Test Loss（红线）随 Epoch 的变化。可以直观对比训练集和测试集的误差下降趋势。
+- （Accuracy 曲线）：绘制了 Test Accuracy（绿线）随 Epoch 的变化，展示模型在测试集上准确率的提升过程。
+
+核心作用：通过曲线的走势，帮助开发者直观判断模型是否收敛、学习率是否合适，以及是否存在过拟合现象（例如两条 Loss 曲线是否出现较大分离）。
+
+```python
+plt.figure(figsize=(14, 5))
+
+# 左图：Loss 曲线
+plt.subplot(1, 2, 1)
+plt.plot(range(1, epochs+1), train_losses, label='Train Loss', color='blue', marker='o', markersize=4)
+plt.plot(range(1, epochs+1), test_losses, label='Test Loss', color='red', marker='s', markersize=4)
+plt.title('Loss Curve (Train vs Test)')
+plt.xlabel('Epoch')
+plt.ylabel('Loss')
+plt.legend()
+plt.grid(True, linestyle='--', alpha=0.6)
+
+# 右图：Accuracy 曲线
+plt.subplot(1, 2, 2)
+plt.plot(range(1, epochs+1), test_accs, label='Test Accuracy', color='green', marker='^')
+plt.title('Test Accuracy Curve')
+plt.xlabel('Epoch')
+plt.ylabel('Accuracy')
+plt.legend()
+plt.grid(True, linestyle='--', alpha=0.6)
+
+plt.tight_layout()
+plt.show()
+
+```
+
+输出：
+<div align="center">
+  <img width="1400" height="500" alt="curve" src="https://github.com/user-attachments/assets/f406bdeb-8803-4db3-87c8-d2a561912ebd" />
+</div>
+
+### 7. 绘制混淆矩阵
+
+模型的混淆矩阵可视化，用以直观分析模型在各个类别上的分类表现和误判情况。具体概括如下：
+- 数据计算：调用 confusion_matrix，利用收集到的真实标签（all_labels）和预测标签（all_preds）生成 10×10的混淆矩阵。
+- 热力图渲染：使用 plt.imshow 将矩阵渲染为蓝色调的热力图（cmap='Blues'），并添加颜色条（colorbar）辅助查看数值大小。
+- 数值标注：通过双层循环遍历矩阵的每一个格子，将具体数字填在中心。巧妙利用 thresh 阈值判断背景深浅：深色背景填白字，浅色背景填黑字，确保数字清晰可见。
+- 坐标轴设置：设定 X 轴为“预测标签”，Y 轴为“真实标签”，刻度标尺设为 0-9。
+
+核心作用：在这张图中，对角线上的深色方块代表预测正确的数量；而非对角线上的浅色方块则暴露了模型的弱点（例如，如果第 4 行第 9 列有数字，说明模型容易把真实的 4 错认成 9）。
+
+```python
+cm = confusion_matrix(all_labels, all_preds)
+
+plt.figure(figsize=(8, 6))
+plt.imshow(cm, interpolation='nearest', cmap='Blues')
+plt.title('LeNet Confusion Matrix')
+plt.colorbar()
+
+# 在矩阵格子里填上具体数字
+thresh = cm.max() / 2.
+for i in range(cm.shape[0]):
+    for j in range(cm.shape[1]):
+        plt.text(j, i, format(cm[i, j], 'd'), ha="center", va="center",
+                 color="white" if cm[i, j] > thresh else "black")
+
+plt.xlabel('Predicted Label')
+plt.ylabel('True Label')
+plt.xticks(range(10))
+plt.yticks(range(10))
+plt.tight_layout()
+plt.show()
+```
+
+输出：
+<div align="center">
+  <img width="800" height="600" alt="confusion matrix" src="https://github.com/user-attachments/assets/d319d9b2-ac60-4257-8cab-08ca328ee28e" />
+</div>
+
+### 8.卷积与池化特征图可视化
+
+神经网络内部的过程可视化，直观展示卷积层和池化层是如何一步步提取图像特征的。简要概括如下：
+- 数据提取：从测试集中抽取 5 张手写数字图片（x_vis）。
+- 中间层前向传播：手动执行两次 “卷积 → Sigmoid → 池化” 操作，单独截取并保存这两个阶段产生的特征图（feature1_pool 和 feature2_pool）。
+- 张量转换：将模型中的张量（Tensor）脱离计算图（detach），移至 CPU 并转换为 NumPy 数组，以便用 Matplotlib 绘图。
+- 网格绘图：创建一个 3×5 的画布：
+    - 第一行（Original）：显示原始输入图像。
+    - 第二行（Conv1+Pool）：显示第一层提取的特征。
+    - 第三行（Conv2+Pool）：显示第二层提取的高维抽象特征。
+
+> 可视化技巧：绘图时使用了 img[i].sum(0)，这是通过将多通道特征图在通道维度上求和，将其压缩成单通道矩阵，从而能用灰度图直观展现出来。
+
+
+```python
+# 重新取一个 batch 的测试数据用于可视化
+dataiter = iter(testloader)
+images, labels = next(dataiter)
+x_vis = images[:5].to(device) # 取前5张
+
+# 第一层：卷积 -> Sigmoid -> 池化
+feature1 = torch.sigmoid(model.conv1(x_vis))
+feature1_pool = F.avg_pool2d(feature1, kernel_size=2, stride=2)
+
+# 第二层：卷积 -> Sigmoid -> 池化
+feature2 = torch.sigmoid(model.conv2(feature1_pool))
+feature2_pool = F.avg_pool2d(feature2, kernel_size=2, stride=2)
+
+n = 5 
+img = x_vis.detach().cpu().numpy()
+f1 = feature1_pool.detach().cpu().numpy()
+f2 = feature2_pool.detach().cpu().numpy()
+
+fig, ax = plt.subplots(3, n, figsize=(15, 8))
+for i in range(n):
+    ax[0,i].imshow(img[i].sum(0), cmap='gray')
+    ax[0,i].set_title("Original")
+    ax[0,i].axis('off')
+    
+    ax[1,i].imshow(f1[i].sum(0), cmap='gray')
+    ax[1,i].set_title("Conv1 + Pool")
+    ax[1,i].axis('off')
+    
+    ax[2,i].imshow(f2[i].sum(0), cmap='gray')
+    ax[2,i].set_title("Conv2 + Pool")
+    ax[2,i].axis('off')
+
+plt.tight_layout()
+plt.show()
+```
+
+输出：
+<div align="center">
+  <img width="1500" height="800" alt="comparation" src="https://github.com/user-attachments/assets/c6b45d19-ed11-420e-b700-63abd349f0c8" />
+</div>
+
 ## 三、实验结果与分析
 
