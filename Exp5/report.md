@@ -148,5 +148,63 @@ class Net(nn.Module):
 model = Net().to(device)
 optimizer = optim.Adam(model.parameters(), lr=1e-2)
 ```
+
+### 5. 模型训练与测试主循环
+#### 训练阶段：
+- 核心作用：让模型从数据中学习。
+- 流程概述：将模型设为 train() 模式，遍历训练集批次。通过前向传播计算预测值，利用交叉熵求出误差（Loss），再执行反向传播（backward）计算梯度，最后使用 Adam 优化器（step）更新网络权重。整个过程中累加误差，计算并记录本轮的平均训练 Loss。
+
+#### 测试阶段：
+- 核心作用：评估模型在未见过的数据上的真实水平（不更新权重）。
+- 流程概述：将模型切换为 eval() 模式并关闭梯度计算（torch.no_grad）以节省内存。遍历测试集进行前向推理，统计预测正确的样本数以计算准确率（Acc）和测试 Loss。同时，在最后一轮（Epoch 30）额外收集所有的预测标签和真实标签，为后续绘制混淆矩阵提供数据。
+- 
+```python
+epochs = 30
+train_losses, test_losses, test_accs = [], [], []
+all_preds, all_labels = [], [] # 用于最后绘制混淆矩阵
+
+print("\n开始训练...")
+for epoch in range(epochs):
+    # --- 训练阶段 ---
+    model.train()
+    running_loss = 0.0
+    for batch_idx, (x, y) in enumerate(trainloader):
+        x, y = x.to(device), y.to(device)
+        optimizer.zero_grad()
+        out = model(x)
+        loss = F.cross_entropy(out, y)
+        loss.backward()
+        optimizer.step()
+        running_loss += loss.item()
+    
+    train_loss = running_loss / len(trainloader)
+    train_losses.append(train_loss)
+
+    # --- 测试阶段 ---
+    model.eval()
+    correct = 0
+    testloss = 0
+    with torch.no_grad():
+        for batch_idx, (x, y) in enumerate(testloader):
+            x, y = x.to(device), y.to(device)
+            out = model(x)
+            testloss += F.cross_entropy(out, y).item()
+            pred = out.max(dim=1, keepdim=True)[1]
+            correct += pred.eq(y.view_as(pred)).sum().item()
+            
+            # 收集全部结果用于混淆矩阵
+            if epoch == epochs - 1: # 只在最后一个 epoch 收集，节省内存
+                all_preds.extend(pred.cpu().numpy().flatten())
+                all_labels.extend(y.cpu().numpy().flatten())
+
+    acc = correct / len(testloader.dataset)
+    test_loss = testloss / (batch_idx + 1)
+    
+    test_losses.append(test_loss)
+    test_accs.append(acc)
+    
+    # 输出日志
+    print('epoch:{}, train_loss:{:.4f}, test_loss:{:.4f}, acc:{:.4f}'.format(epoch + 1, train_loss, test_loss, acc))
+```
 ## 三、实验结果与分析
 
